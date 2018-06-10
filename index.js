@@ -59,6 +59,5 @@ ${array_html}
 
 </body>
 </html>
-
 `;
 fs.writeFile(`./index.html`, html, { flag: 'w', encoding: 'utf-8', mode: '0666' })
