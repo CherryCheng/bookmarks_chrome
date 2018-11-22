@@ -9,15 +9,15 @@ let array = require('./array');
 let path = './icon/';
 let imgType = 'png';
 
-
-let strArr = [...array];
+let strArr = [];
 
 
 export_array.forEach(m => strArr.push({
     icon: m.ICON,
     name: m.NAME,
     href: m.HREF,
-    title: m.TITLE
+    title: m.TITLE,
+    klass: m.KLASS
 }))
 
 strArr.forEach(o => {
@@ -28,25 +28,41 @@ strArr.forEach(o => {
         });
         o.icon = path + o.name + "." + imgType;
     } catch (error) {
-        o.icon = "./s.png";
+        o.icon = path + "link." + imgType;
     }
 });
 
+strArr = strArr.concat(array);
 
-fs.writeFile(`./array.js`, JSON.stringify(strArr), {
+
+const sortFrom = ["smzc", "github", "gitbook", "ng", "rxjs", "vue", "miniprogram", "git", "tool", "lib", "other"];
+
+strArr.sort((a, b) => sortFrom.indexOf(a.klass) - sortFrom.indexOf(b.klass));
+
+
+fs.writeFile(`./array.js`, 'module.exports = array = ' + JSON.stringify(strArr), {
     flag: 'w',
     encoding: 'utf-8',
     mode: '0666'
 })
 
+let groupHtml = '';
 
+const groupBy = require('./groupBy');
 
-let array_html = '';
-strArr.forEach(o => {
-    array_html += `\t<a target="_blank" href="${o.href}"><img src="${o.icon}">${o.title}</a>\n`
-})
+const groupObj = groupBy(strArr, 'klass');
 
-let html = `
+for (const klass in groupObj) {
+    if (groupObj.hasOwnProperty(klass)) {
+        let nodeHtml = '';
+        groupObj[klass].forEach(o => {
+            nodeHtml += `\t<a target="_blank" href="${o.href}"><img src="${o.icon}">${o.title}</a>\n`
+        })
+        groupHtml += `<fieldset><legend>${klass}</legend>\n${nodeHtml}</fieldset>\n`;
+    }
+}
+
+let document = `
 
 <!DOCTYPE html>
 <html lang="en">
@@ -55,6 +71,7 @@ let html = `
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link rel="shortcut icon" href="./s.png" type="image/x-icon"/>
+    <title> book_marker </title>
     <style>
         body {
             padding: 20px
@@ -91,12 +108,12 @@ let html = `
 </head>
 <body>
 
-${array_html}
+${groupHtml}
 
 </body>
 </html>
 `;
-fs.writeFile(`./index.html`, html, {
+fs.writeFile(`./index.html`, document, {
     flag: 'w',
     encoding: 'utf-8',
     mode: '0666'
